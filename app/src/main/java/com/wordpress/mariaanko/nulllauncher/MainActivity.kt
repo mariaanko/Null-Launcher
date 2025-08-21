@@ -37,14 +37,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.Typography
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MinimalLauncherApp()
+            MaterialTheme(
+                typography = AppTypography
+            ) {
+                MinimalLauncherApp()
+            }
         }
     }
 }
@@ -88,6 +98,7 @@ fun MinimalLauncherApp() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(96.dp))
+                Clock()
                 SearchBar(
                     query = query,
                     onQueryChange = { query = it }
@@ -104,7 +115,7 @@ fun MinimalLauncherApp() {
 
                         Text(
                             text = label,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodySmall,
                             color = Color.White,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -154,3 +165,48 @@ fun SearchBar(
         )
     )
 }
+
+@Composable
+fun Clock() {
+    var dateTime by remember { mutableStateOf(getCurrentDateTime()) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            dateTime = getCurrentDateTime()
+            kotlinx.coroutines.delay(1000)
+        }
+    }
+
+    Text(
+        text = dateTime,
+        style = MaterialTheme.typography.bodyMedium.copy(
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium
+        ),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+}
+
+private fun getCurrentDateTime(): String {
+    val formatter = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+    return formatter.format(java.util.Date())
+}
+
+
+val AppFont = FontFamily(
+    Font(R.font.lower_pixel_regular, FontWeight.Normal)
+)
+
+val AppTypography = Typography(
+    bodyLarge = TextStyle(
+        fontFamily = AppFont,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp
+    ),
+    labelLarge = TextStyle(
+        fontFamily = AppFont,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp
+    )
+)
