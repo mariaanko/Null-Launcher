@@ -1,7 +1,13 @@
 package com.wordpress.mariaanko.nulllauncher
 
+import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
+import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.os.StatFs
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -104,6 +110,8 @@ fun MinimalLauncherApp() {
                     onQueryChange = { query = it }
                 )
 
+                SystemInfo(query)
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 LazyColumn(
@@ -193,6 +201,39 @@ private fun getCurrentDateTime(): String {
     return formatter.format(java.util.Date())
 }
 
+@Composable
+fun SystemInfo(query: String) {
+    val context = LocalContext.current
+
+    if (query.isBlank()) {
+        val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        val batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+
+        val memInfo = ActivityManager.MemoryInfo()
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        activityManager.getMemoryInfo(memInfo)
+        val freeRamMB = memInfo.availMem / (1024 * 1024)
+        val ramMB = memInfo.totalMem / (1024 * 1024)
+
+        // Storage info
+        val statFs = StatFs(Environment.getDataDirectory().path)
+        val totalBytes = statFs.blockSizeLong * statFs.blockCountLong
+        val availableBytes = statFs.blockSizeLong * statFs.availableBlocksLong
+        val totalGB = totalBytes / (1024 * 1024 * 1024)
+        val freeGB = availableBytes / (1024 * 1024 * 1024)
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Battery: $batteryLevel%", fontSize = 14.sp, color = Color.White)
+            Text("RAM: ${freeRamMB}MB free of ${ramMB} GB", fontSize = 14.sp, color = Color.White)
+            Text("Storage: ${freeGB}GB / ${totalGB}GB", fontSize = 14.sp, color = Color.White)
+        }
+    }
+}
 
 val AppFont = FontFamily(
     Font(R.font.lower_pixel_regular, FontWeight.Normal)
