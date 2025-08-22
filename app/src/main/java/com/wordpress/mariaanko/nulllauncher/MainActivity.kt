@@ -4,7 +4,6 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.os.BatteryManager
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.StatFs
@@ -22,11 +21,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -41,7 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -50,6 +48,7 @@ import androidx.compose.material3.Typography
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -143,36 +142,50 @@ fun MinimalLauncherApp() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBar(
     query: String,
-    onQueryChange: (String) -> Unit,
+    onQueryChange: (String) -> Unit
 ) {
+    var debouncedQuery by remember { mutableStateOf(query) }
+
+    LaunchedEffect(query) {
+        delay(150) // debounce delay
+        debouncedQuery = query.lowercase()
+    }
+
     TextField(
         value = query,
         onValueChange = onQueryChange,
-        placeholder = { Text("Search apps…") },
+        placeholder = { Text("Search apps…", color = Color.Gray) },
         singleLine = true,
         modifier = Modifier
-            .fillMaxWidth(0.85f)
-            .clip(RoundedCornerShape(62.dp)),
+            .fillMaxWidth(0.8f)
+            .clip(RoundedCornerShape(16.dp)),
+        textStyle = TextStyle(
+            color = Color.Gray,
+            fontSize = 18.sp
+        ),
         colors = TextFieldDefaults.colors(
-            focusedIndicatorColor = Color.Transparent,
+            focusedIndicatorColor = Color.Gray,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent
         ),
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = ImeAction.Search
-        )
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Clear search",
+                        tint = Color.Gray
+                    )
+                }
+            }
+        }
     )
 }
+
 
 @Composable
 fun Clock() {
